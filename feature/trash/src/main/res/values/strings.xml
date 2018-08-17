@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="trash_tutorial_no_trash_hint">Nothing in Trash</string>
+</resources>

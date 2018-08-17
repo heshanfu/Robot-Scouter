@@ -10,6 +10,11 @@
             android:id="@+id/action_export_all_teams"
             android:icon="@drawable/ic_import_export_colorable_24dp"
             android:title="@string/export_all_teams_title" />
+
+        <item
+            android:id="@+id/action_view_trash"
+            android:icon="@drawable/ic_delete_black_24dp"
+            android:title="@string/trash_activity_title" />
     </group>
 
     <group android:id="@+id/two">
