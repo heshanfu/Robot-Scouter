@@ -25,12 +25,12 @@ import com.supercilex.robotscouter.core.logFailures
 import com.supercilex.robotscouter.core.model.Scout
 import com.supercilex.robotscouter.core.model.Team
 import com.supercilex.robotscouter.core.model.TemplateType
+import kotlinx.coroutines.experimental.DefaultDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.withContext
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.runOnUiThread
 import java.util.Date
-import kotlin.coroutines.experimental.coroutineContext
 import kotlin.math.abs
 
 val scoutParser = SnapshotParser { snapshot ->
@@ -77,13 +77,7 @@ fun Team.addScout(overrideId: String?, existingScouts: ObservableSnapshotArray<S
 
                 scout.name
             } ?: run {
-                val deferredName = async {
-                    scoutParser.parseSnapshot(
-                            getTemplateRef(templateId).get().logFailures(templateId).await()
-                    ).name
-                }
-
-                withContext(coroutineContext) {
+                async {
                     val snapshot = getTemplateRef(templateId)
                             .collection(FIRESTORE_METRICS).get().logFailures(templateId).await()
                     val metrics = snapshot.documents.associate { it.id to checkNotNull(it.data) }
@@ -92,10 +86,14 @@ fun Team.addScout(overrideId: String?, existingScouts: ObservableSnapshotArray<S
                             set(metricsRef.document(id), data)
                         }
                     }.logFailures(scoutRef, metrics)
-                }
+                }.logFailures()
 
                 try {
-                    deferredName.await()
+                    withContext(DefaultDispatcher) {
+                        scoutParser.parseSnapshot(
+                                getTemplateRef(templateId).get().logFailures(templateId).await()
+                        ).name
+                    }
                 } catch (e: FirebaseFirestoreException) {
                     null // Don't abort scout addition if name fetch failed
                 }
